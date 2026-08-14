@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.brunomikoski.animationsequencer": "https://github.com/brunomikoski/Animation-Sequencer.git",
     "com.unity.ai.navigation": "2.0.11",
     "com.unity.cinemachine": "3.1.6",
     "com.unity.collab-proxy": "2.11.4",
