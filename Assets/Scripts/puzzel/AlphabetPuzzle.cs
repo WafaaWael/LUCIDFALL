@@ -1,4 +1,4 @@
-using TMPro;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -7,54 +7,102 @@ public class AlphabetPuzzle : MonoBehaviour
     [Header("Puzzle")]
     [SerializeField] private string targetWord = "KEYBOARD";
 
-    [Header("UI")]
-    [SerializeField] private TMP_Text[] letterSlots;
-    [SerializeField] private TMP_Text completedWordText;
+    [Header("Table Letters")]
+    [SerializeField] private List<TableLetter> tableLetters;
 
     [Header("Events")]
     [SerializeField] private UnityEvent onLetterCollected;
     [SerializeField] private UnityEvent onPuzzleCompleted;
 
-    private int currentIndex = 0;
+    private readonly HashSet<char> collectedLetters = new();
 
     private void Start()
     {
-        // Clear the slots
-        for (int i = 0; i < letterSlots.Length; i++)
+        // Make sure all table letters are hidden at the beginning
+        foreach (TableLetter tableLetter in tableLetters)
         {
-            letterSlots[i].text = "_";
+            if (tableLetter != null)
+            {
+                tableLetter.gameObject.SetActive(false);
+            }
         }
-
-        completedWordText.gameObject.SetActive(false);
     }
 
-    public void CollectLetter(char letter)
+    public bool CollectLetter(char letter)
     {
-        if (currentIndex >= targetWord.Length)
-            return;
-
         letter = char.ToUpper(letter);
 
-        // Add letter to the next available slot
-        letterSlots[currentIndex].text = letter.ToString();
+        // Make sure this letter is actually required
+        if (!targetWord.ToUpper().Contains(letter.ToString()))
+        {
+            Debug.Log($"Letter {letter} is not part of the puzzle.");
+            return false;
+        }
 
-        currentIndex++;
+        // Don't allow collecting the same letter twice
+        if (collectedLetters.Contains(letter))
+        {
+            Debug.Log($"Letter {letter} has already been collected.");
+            return false;
+        }
+
+        // Add the letter to the collected letters
+        collectedLetters.Add(letter);
+
+        Debug.Log($"Collected letter: {letter}");
+
+        // Find the matching letter on the table
+        TableLetter tableLetter = FindTableLetter(letter);
+
+        if (tableLetter != null)
+        {
+            tableLetter.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning($"No table letter found for: {letter}");
+        }
 
         onLetterCollected?.Invoke();
 
-        // Check if word is complete
-        if (currentIndex >= targetWord.Length)
+        CheckPuzzleCompleted();
+
+        return true;
+    }
+
+    private TableLetter FindTableLetter(char letter)
+    {
+        foreach (TableLetter tableLetter in tableLetters)
         {
-            CompletePuzzle();
+            if (tableLetter == null)
+                continue;
+
+            if (tableLetter.Letter == letter)
+            {
+                return tableLetter;
+            }
         }
+
+        return null;
+    }
+
+    private void CheckPuzzleCompleted()
+    {
+        // Check every letter required by the target word
+        foreach (TableLetter letter in tableLetters)
+        {
+            if (!letter.gameObject.activeSelf) // Use activeSelf to check if the GameObject is active
+            {
+                return;
+            }
+        }
+
+        CompletePuzzle();
     }
 
     private void CompletePuzzle()
     {
-        completedWordText.text = targetWord;
-        completedWordText.gameObject.SetActive(true);
-
-        Debug.Log($"Word completed: {targetWord}");
+        Debug.Log($"Puzzle completed! Word: {targetWord}");
 
         onPuzzleCompleted?.Invoke();
     }
