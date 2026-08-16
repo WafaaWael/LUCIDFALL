@@ -1,6 +1,10 @@
+using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class SceneTransition : MonoBehaviour
 {
@@ -81,5 +85,13 @@ public class SceneTransition : MonoBehaviour
         }
 
         fadePanel.alpha = 0f;
+    }
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }
